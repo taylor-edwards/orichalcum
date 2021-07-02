@@ -2,14 +2,14 @@
  * Store API
  */
 
-export const createStore = (reducer, middlewares, initialState) => {
+const genID = (() => {
+  let i = 0
+  return () => `id${(i++).toString(36).padStart(8, 0)}`
+})()
+
+export const createStore = (reducer, middleware, state) => {
   const actionQueue = []
   const listeners = {}
-  const getNextListenerId = (() => {
-    let i = 0
-    return () => `listener-${i++}`
-  })()
-  let state = initialState
   let dispatchInProgress = false
 
   const alertListeners = () =>
@@ -19,37 +19,41 @@ export const createStore = (reducer, middlewares, initialState) => {
     actionQueue.push(laterAction)
     while (actionQueue.length > 0) {
       if (!dispatchInProgress) {
-        // for multiple actions, only alert listeners once
-        dispatch(actionQueue.shift(), { silent: true })
-        alertListeners()
+        dispatch(actionQueue.shift())
       }
     }
   }
 
-  const dispatch = (action, { silent = false } = {}) => {
-    dispatchInProgress = true
-    let nextAction = action
-    for (let i = 0; i < middlewares.length; i++) {
-      // middleware can alter the action but not state
-      // middleware can dispatch additional actions
-      // dispatch can be called asynchronously from middleware
-      nextAction = middlewares[i](action, state, queueForDispatch)
+  const dispatch = (action, options = { silent: false }) => {
+    if (dispatchInProgress) {
+      queueForDispatch(action)
+      return
     }
+
+    dispatchInProgress = true
+
+    // middleware can alter the action but not state
+    // middleware can dispatch additional actions
+    // dispatch can be called asynchronously from middleware
+    // use combineMiddleware to use more than one layer
+    action = middleware(action, state, queueForDispatch) ?? action
+
     // reducers can alter state but not the action
     // use combineReducers to supply more than one reducer
     state = reducer(action, state)
-    if (!silent) {
+
+    if (!options.silent) {
       alertListeners()
     }
+
     dispatchInProgress = false
-    return state
   }
 
   return {
     dispatch,
     getState: () => state,
     listen: fn => {
-      const id = getNextListenerId()
+      const id = genID()
       listeners[id] = fn
       return () => {
         delete listeners[id]
@@ -65,4 +69,13 @@ export const combineReducers =
       state = reducers[i](action, state)
     }
     return state
+  }
+
+export const combineMiddleware =
+  (...middleware) =>
+  (action, state, dispatch) => {
+    for (let i = 0; i < middleware.length; i++) {
+      action = middleware[i](action, state, dispatch) ?? action
+    }
+    return action
   }

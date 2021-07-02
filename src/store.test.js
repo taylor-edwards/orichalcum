@@ -33,12 +33,18 @@ const myReducer = (action, state) => {
 }
 
 // Use middleware to manage side effects and asynchronous functionality
-const myAsyncMiddleware = (action, state, dispatch) => {
-  if (action.type === ACTIONS.DELAY_FOO) {
-    setTimeout(
-      () => dispatch({ type: ACTIONS.SET_FOO, value: 'time is no matter!' }),
-      3000,
-    )
+const myMiddleware = (action, state, dispatch) => {
+  switch (action.type) {
+    case ACTIONS.DELAY_FOO:
+      setTimeout(
+        () => dispatch({ type: ACTIONS.SET_FOO, value: 'time is no matter!' }),
+        3000,
+      )
+      break
+
+    case ACTIONS.SET_FOO:
+      action.value = 'overridden by mw'
+      break
   }
   return action
 }
@@ -55,15 +61,16 @@ const initialState = {
 /**
  * Demonstration: putting a finite-state machine into use
  */
+test('store', () => {
+  const store = createStore(myReducer, myMiddleware, initialState)
+  assert(is, store.getState(), initialState)
 
-const store = createStore(myReducer, [myAsyncMiddleware], initialState)
-assert(is, store.getState(), initialState)
+  // store.dispatch({ type: ACTIONS.DELAY_FOO })
+  // assert(is, initialState, store.getState())
 
-store.dispatch({ type: ACTIONS.DELAY_FOO })
-assert(is, initialState, store.getState())
+  store.dispatch({ type: ACTIONS.FLIP_BITS })
+  assert(equals, false, store.getState().all_my_bits.just_one_piece)
 
-store.dispatch({ type: ACTIONS.FLIP_BITS })
-assert(equals, false, store.getState().all_my_bits.just_one_piece)
-
-store.dispatch({ type: ACTIONS.SET_FOO, value: 'choco yoohoo' })
-assert(equals, 'choco yoohoo', store.getState().foo)
+  store.dispatch({ type: ACTIONS.SET_FOO, value: 'choco yoohoo' })
+  assert(equals, 'overridden by mw', store.getState().foo)
+})
