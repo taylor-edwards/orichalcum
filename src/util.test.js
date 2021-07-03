@@ -11,9 +11,8 @@ import {
   map,
   noop,
 } from './util.js'
-import { assert, test } from '../test-util.js'
 
-test('compose', () => {
+export const testCompose = assert => {
   assert(is, 'foo', compose(identity)('foo'))
   assert(is, 'foo', compose(identity, identity)('foo'))
   assert(is, 'bar', compose(identity, always('bar'), identity)('foo'))
@@ -24,9 +23,9 @@ test('compose', () => {
   )
   assert(is, 'a is 1\nb is 2\nc is 3', printObject({ a: 1, b: 2, c: 3 }))
   assert(is, '0 is a\n1 is b\n2 is c', printObject(['a', 'b', 'c']))
-})
+}
 
-test('curry', () => {
+export const testCurry = assert => {
   const formABC = curry((a, b, c) => `${a}${b}${c}`)
   const target = 'abc'
   assert(is, target, formABC('a', 'b', 'c'))
@@ -34,9 +33,9 @@ test('curry', () => {
   assert(is, target, formABC('a', 'b')('c'))
   assert(is, target, formABC('a')('b', 'c'))
   assert(is, target, formABC()()()('a', 'b', 'c'))
-})
+}
 
-test('andThen', async () => {
+export const testAndThen = async assert => {
   const foo = await andThen(
     identity,
     noop,
@@ -47,9 +46,9 @@ test('andThen', async () => {
     always('bar'),
   )(new Promise((resolve, reject) => reject(new Error('ignored'))))
   assert(is, 'bar', bar)
-})
+}
 
-test('equals', () => {
+export const testEquals = assert => {
   // support primitives
   assert(equals, 1, 1)
   assert(equals, 3.141, 3.141)
@@ -91,4 +90,4 @@ test('equals', () => {
     false,
     equals(targetFn, () => {}),
   )
-})
+}

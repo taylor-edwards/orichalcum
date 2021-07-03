@@ -1,10 +1,9 @@
 import { createStore, combineReducers } from './store.js'
 import { identity, is, equals } from './util.js'
-import { assert, test } from '../test-util.js'
 
-// Enumerate changes to state as "actions".
+// Enumerate changes to state as "actions"
 // This also helps with serialization, in case actions need to go through
-// some additional cache or network layers before reaching the store.
+// some additional cache or network layers before reaching the store
 const ACTIONS = {
   DELAY_FOO: 'DELAY_FOO',
   FLIP_BITS: 'FLIP_BITS',
@@ -49,7 +48,7 @@ const myMiddleware = (action, state, dispatch) => {
   return action
 }
 
-// State is just data! use structures that make sense in your application
+// State is just data! Use structures that make sense in your application
 const initialState = {
   foo: 'bar',
   all_my_bits: {
@@ -61,7 +60,7 @@ const initialState = {
 /**
  * Demonstration: putting a finite-state machine into use
  */
-test('store', () => {
+export const testStore = assert => {
   const store = createStore(myReducer, myMiddleware, initialState)
   assert(is, store.getState(), initialState)
 
@@ -73,4 +72,4 @@ test('store', () => {
 
   store.dispatch({ type: ACTIONS.SET_FOO, value: 'choco yoohoo' })
   assert(equals, 'overridden by mw', store.getState().foo)
-})
+}
