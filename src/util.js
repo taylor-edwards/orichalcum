@@ -75,6 +75,23 @@ export const fromEntries = x => Object.fromEntries(x)
 
 export const keys = x => Object.prototype.keys.call(x)
 
+export const omit = curry((key, obj) =>
+  compose(
+    fromEntries,
+    filter(([k]) => k !== key),
+    entries,
+  )(obj),
+)
+
+export const modify = curry((initial, changes) =>
+  compose(
+    filteredChanges => Object.assign({}, initial, filteredChanges),
+    fromEntries,
+    filter(([key, value]) => typeof value !== 'undefined'),
+    entries,
+  )(changes),
+)
+
 export const applySpec =
   spec =>
   (...args) =>

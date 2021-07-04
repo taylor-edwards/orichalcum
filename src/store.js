@@ -1,6 +1,6 @@
 const genID = (() => {
   let i = 0
-  return () => `id:${(i++).toString(36).padStart(8, 0)}`
+  return () => `id:${(i++).toString(36).padStart(8, '0')}`
 })()
 
 export const createStore = (reducer, middleware, state) => {
