@@ -1,5 +1,4 @@
 import { createStore, combineReducers } from './store.js'
-import { identity, is, equals } from './util.js'
 
 // Enumerate changes to state as "actions"
 // This also helps with serialization, in case actions need to go through
@@ -37,12 +36,14 @@ const myMiddleware = (action, state, dispatch) => {
     case ACTIONS.DELAY_FOO:
       setTimeout(
         () => dispatch({ type: ACTIONS.SET_FOO, value: 'time is no matter!' }),
-        3000,
+        10,
       )
       break
 
     case ACTIONS.SET_FOO:
-      action.value = 'overridden by mw'
+      if (action.value.startsWith('choco')) {
+        action.value = 'overridden by mw'
+      }
       break
   }
   return action
@@ -60,16 +61,25 @@ const initialState = {
 /**
  * Demonstration: putting a finite-state machine into use
  */
-export const testStore = assert => {
-  const store = createStore(myReducer, myMiddleware, initialState)
-  assert(is, store.getState(), initialState)
+export const testStore = ({ assert, equals, refEquals }) =>
+  new Promise((resolve, reject) => {
+    const store = createStore(myReducer, myMiddleware, initialState)
+    assert(refEquals, store.getState(), initialState)
 
-  // store.dispatch({ type: ACTIONS.DELAY_FOO })
-  // assert(is, initialState, store.getState())
+    store.dispatch({ type: ACTIONS.FLIP_BITS })
+    assert(equals, false, store.getState().all_my_bits.just_one_piece)
 
-  store.dispatch({ type: ACTIONS.FLIP_BITS })
-  assert(equals, false, store.getState().all_my_bits.just_one_piece)
+    store.dispatch({ type: ACTIONS.SET_FOO, value: 'choco yoohoo' })
+    assert(equals, 'overridden by mw', store.getState().foo)
 
-  store.dispatch({ type: ACTIONS.SET_FOO, value: 'choco yoohoo' })
-  assert(equals, 'overridden by mw', store.getState().foo)
-}
+    const timeout = setTimeout(() => {
+      reject(new Error('state.foo should have been updated asynchronously'))
+    }, 1000)
+    store.listen(state => {
+      if (state.foo === 'time is no matter!') {
+        clearTimeout(timeout)
+        resolve()
+      }
+    })
+    store.dispatch({ type: ACTIONS.DELAY_FOO })
+  })

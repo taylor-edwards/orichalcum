@@ -11,6 +11,32 @@ const assert = (() => {
   }
 })()
 
+const refEquals = (x, y) => x === y
+
+const arrayEquals = (x, y) =>
+  Array.isArray(x) &&
+  Array.isArray(y) &&
+  x.length === y.length &&
+  x.reduce((isEqual, nextX, index) => isEqual && equals(nextX, y[index]), true)
+
+const equals = (x, y) => {
+  if (refEquals(x, y)) {
+    return true
+  }
+  if (typeof x === 'object' && typeof y === 'object') {
+    if (arraysEqual(x, y)) {
+      return true
+    }
+    if (
+      arrayEquals(Object.keys(x), Object.keys(y)) &&
+      arrayEquals(Object.values(x), Object.values(y))
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
 const gatherTests = paths =>
   new Promise((resolve, reject) => {
     glob(paths, async (err, files) => {
@@ -30,15 +56,16 @@ const gatherTests = paths =>
   })
 
 const runTests = tests =>
-  tests.map(([name, testFn]) => {
+  tests.map(async ([name, testFn]) => {
     console.log(`Running ${name}...`)
     try {
-      const res = testFn(assert)
+      const res = testFn({ assert, equals, refEquals, arrayEquals })
       if (res instanceof Promise) {
         res.catch(err =>
           console.error(`Uncaught error in Promise (running ${name}):`, err),
         )
       }
+      return res
     } catch (err) {
       console.error('Uncaught error:', err)
     }

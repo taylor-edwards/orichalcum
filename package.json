@@ -9,7 +9,6 @@
     "format": "prettier --write src/**/*.js"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
   "devDependencies": {
     "glob": "^7.1.7",

@@ -1,8 +1,16 @@
-const genID = (() => {
-  let i = 0
-  return () => `id:${(i++).toString(36).padStart(8, '0')}`
-})()
+export const genID = () => `id:${Math.random().toString(36).substr(2)}`
 
+/*
+ * createStore(
+ *   (action, state) => state, // combineReducers(...fns)
+ *   (action, state, dispatch) => action, // combineMiddleware(...fns)
+ *   initialState,
+ * ) --> {
+ *   dispatch: action => void,
+ *   getState: () => state,
+ *   listen: (state => void) => removeListener,
+ * }
+ */
 export const createStore = (reducer, middleware, state) => {
   const actionQueue = []
   const listeners = {}
@@ -17,11 +25,12 @@ export const createStore = (reducer, middleware, state) => {
 
   const dispatchFromQueue = () => {
     dispatchInProgress = true
+    const prevState = state
     while (typeof actionQueue[0] !== 'undefined') {
       dispatch(actionQueue.shift())
     }
+    alertListeners(state, prevState)
     dispatchInProgress = false
-    alertListeners()
   }
 
   const dispatch = action => {
@@ -54,19 +63,23 @@ export const createStore = (reducer, middleware, state) => {
   }
 }
 
+// Each reducer must have the signature `(action, state) => state`
+// Reducers are expected to return the original state or a modified copy
 export const combineReducers =
   (...reducers) =>
   (action, state) => {
-    for (const reducer in reducers) {
+    for (const reducer of reducers) {
       state = reducer(action, state)
     }
     return state
   }
 
+// Each middleware must have the signature `(action, state, dispatch) => action`
+// Middleware are expected to return the original or modified action
 export const combineMiddleware =
   (...middlewares) =>
   (action, state, dispatch) => {
-    for (const middleware in middlewares) {
+    for (const middleware of middlewares) {
       action = middleware(action, state, dispatch)
     }
     return action
