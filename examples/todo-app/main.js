@@ -8,7 +8,6 @@ import {
 import {
   assoc,
   compose,
-  curry,
   filter,
   keys,
   lensPath,
@@ -36,7 +35,7 @@ const todoListLens = lensProp('todoList')
 
 const todoLens = id => lensPath(['todoList', id])
 
-const setTodo = curry((id, todo, state) =>
+const setTodo = (id, todo, state) =>
   over(
     todoLens(id),
     (prevTodo = todoInitialState) =>
@@ -49,10 +48,9 @@ const setTodo = curry((id, todo, state) =>
         prevTodo,
       ),
     state,
-  ),
-)
+  )
 
-const deleteTodo = curry((id, state) => over(todoListLens, omit([id]), state))
+const deleteTodo = (id, state) => over(todoListLens, omit([id]), state)
 
 // Create a store with predefined "actions" for performing updates and
 // middleware for further integrations:
@@ -96,7 +94,7 @@ export const selectTodoList = view(todoListLens)
 
 export const selectTodoIDList = compose(keys, selectTodoList)
 
-export const selectTodo = curry((id, state) => view(todoLens(id), state))
+export const selectTodo = (id, state) => view(todoLens(id), state)
 
 // Expose action creators for calls to `dispatch`:
 

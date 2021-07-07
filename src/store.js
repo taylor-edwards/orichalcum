@@ -1,5 +1,3 @@
-export const genID = () => `id:${Math.random().toString(36).substr(2)}`
-
 /*
  * createStore(
  *   (action, state) => state, // combineReducers(...fns)
@@ -8,7 +6,7 @@ export const genID = () => `id:${Math.random().toString(36).substr(2)}`
  * ) --> {
  *   dispatch: action => void,
  *   getState: () => state,
- *   listen: (state => void) => removeListener,
+ *   listen: (state => void) => fn removeListener,
  * }
  */
 export const createStore = (reducer, middleware, state) => {
@@ -25,11 +23,9 @@ export const createStore = (reducer, middleware, state) => {
 
   const dispatchFromQueue = () => {
     dispatchInProgress = true
-    const prevState = state
     while (typeof actionQueue[0] !== 'undefined') {
       dispatch(actionQueue.shift())
     }
-    alertListeners(state, prevState)
     dispatchInProgress = false
   }
 
@@ -42,7 +38,11 @@ export const createStore = (reducer, middleware, state) => {
 
     // reducers can alter state but not the action
     // use combineReducers to supply more than one reducer
+    let prevState = state
     state = reducer(action, state)
+
+    // always run attached listeners for each action dispatched
+    alertListeners(state, prevState, action)
   }
 
   const attachListener = fn => {
@@ -53,8 +53,8 @@ export const createStore = (reducer, middleware, state) => {
     }
   }
 
-  const alertListeners = () =>
-    Object.values(listeners).forEach(listener => listener(state))
+  const alertListeners = (...x) =>
+    Object.values(listeners).forEach(listener => listener(...x))
 
   return {
     dispatch: queueForDispatch,
@@ -107,8 +107,7 @@ export const combineMiddleware =
   }
 
 /**
- * Use `applyEffects` to pass an object mapping action types to middleware
- * functions, eg:
+ * Use `applyEffects` to pass an object mapping action types to middleware, eg:
  * ```
  * const myMiddleware = applyEffects({
  *   MY_ACTION_TYPE: (action, state, dispatch) => doSomething(action),
@@ -122,3 +121,45 @@ export const applyEffects = effectMap => (action, state, dispatch) => {
   return action
 }
 
+/**
+ * Use `once` to create a self-cancelling listener. When the predicate function
+ * returns `true`, the returned promise will resolve.
+ *
+ * Pass `{ timeout: 0 }` in the options object to disable the timeout.
+ * ```
+ * const [promise, cancelPromise] = once(
+ *   Listener: (state, prevState, action) => Boolean,
+ *   Store,
+ *   Options: { timeout }
+ * )
+ * promise.then(onSuccess, onError)
+ * ```
+ */
+export const once = (pred, store, { timeout = 300 } = {}) => {
+  let resolve, reject, timer
+  const promise = new Promise((_resolve, _reject) => {
+    resolve = _resolve
+    reject = _reject
+  })
+  const removeListener = store.listen((...x) => {
+    if (pred(...x)) {
+      clearTimeout(timer)
+      removeListener()
+      resolve()
+    }
+  })
+  if (timeout !== 0) {
+    timer = setTimeout(() => {
+      removeListener()
+      reject(new Error(`once listener timed out (waited ${timeout} ms)`))
+    }, timeout)
+  }
+  const cancel = () => {
+    removeListener()
+    clearTimeout(timer)
+    reject(new Error('once listener canceled'))
+  }
+  return [promise, cancel]
+}
+
+export const genID = () => `id:${Math.random().toString(36).substr(2)}`

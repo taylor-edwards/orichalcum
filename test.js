@@ -24,7 +24,7 @@ const equals = (x, y) => {
     return true
   }
   if (typeof x === 'object' && typeof y === 'object') {
-    if (arraysEqual(x, y)) {
+    if (arrayEquals(x, y)) {
       return true
     }
     if (
