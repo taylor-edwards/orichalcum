@@ -1,8 +1,8 @@
 {
   "name": "orichalcum",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Taylor Edwards <me@tayloredwards.net> (tayloredwards.net)",
-  "description": "A state machine library (WIP: do not use!)",
+  "description": "An opinionated state machine library",
   "main": "src/index.js",
   "scripts": {
     "test": "node test.js -- {src,examples}/**/*.test.js",

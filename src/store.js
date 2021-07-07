@@ -63,8 +63,10 @@ export const createStore = (reducer, middleware, state) => {
   }
 }
 
-// Each reducer must have the signature `(action, state) => state`
-// Reducers are expected to return the original state or a modified copy
+/**
+ * Each reducer must have the signature `(action, state) => state`
+ * Reducers are expected to return the original state or a modified copy
+ */
 export const combineReducers =
   (...reducers) =>
   (action, state) => {
@@ -74,8 +76,27 @@ export const combineReducers =
     return state
   }
 
-// Each middleware must have the signature `(action, state, dispatch) => action`
-// Middleware are expected to return the original or modified action
+/**
+ * Use `applyReducers` to pass an object mapping action types to reducers, eg:
+ * ```
+ * const myReducers = applyReducers({
+ *   MY_ACTION_TYPE: (action, state) => doSomething(state),
+ * })
+ * ```
+ */
+export const applyReducers =
+  (reducerMap, initialState) =>
+  (action, state = initialState) => {
+    if (reducerMap.hasOwnProperty(action.type)) {
+      return reducerMap[action.type](action, state)
+    }
+    return state
+  }
+
+/**
+ * Each middleware must have the signature `(action, state, dispatch) => action`
+ * Middleware are expected to return the original or modified action
+ */
 export const combineMiddleware =
   (...middlewares) =>
   (action, state, dispatch) => {
@@ -84,3 +105,20 @@ export const combineMiddleware =
     }
     return action
   }
+
+/**
+ * Use `applyEffects` to pass an object mapping action types to middleware
+ * functions, eg:
+ * ```
+ * const myMiddleware = applyEffects({
+ *   MY_ACTION_TYPE: (action, state, dispatch) => doSomething(action),
+ * })
+ * ```
+ */
+export const applyEffects = effectMap => (action, state, dispatch) => {
+  if (effectMap.hasOwnProperty(action.type)) {
+    return effectMap[action.type](action, state, dispatch)
+  }
+  return action
+}
+

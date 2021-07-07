@@ -1,6 +1,7 @@
 import {
+  applyEffects,
+  applyReducers,
   combineMiddleware,
-  combineReducers,
   createStore,
   genID,
 } from '../../src/store.js'
@@ -18,6 +19,8 @@ import {
   pick,
   view,
 } from 'ramda'
+
+// Define app state and codify allowed mutations:
 
 const appInitialState = {
   todoList: {},
@@ -51,45 +54,43 @@ const setTodo = curry((id, todo, state) =>
 
 const deleteTodo = curry((id, state) => over(todoListLens, omit([id]), state))
 
+// Create a store with predefined "actions" for performing updates and
+// middleware for further integrations:
+
 const actions = {
   ADD_TODO: 'ADD_TODO',
   REMOVE_TODO: 'REMOVE_TODO',
   UPDATE_TODO: 'UPDATE_TODO',
 }
 
-const appReducer = (action, state = appInitialState) => {
-  switch (action.type) {
-    case actions.ADD_TODO:
-    case actions.UPDATE_TODO:
-      return setTodo(action.id, action.todo, state)
+const appReducer = applyReducers(
+  {
+    [actions.ADD_TODO]: ({ id, todo }, state) => setTodo(id, todo, state),
+    [actions.UPDATE_TODO]: ({ id, todo }, state) => setTodo(id, todo, state),
+    [actions.REMOVE_TODO]: ({ id }, state) => deleteTodo(id, state),
+  },
+  appInitialState,
+)
 
-    case actions.REMOVE_TODO:
-      return deleteTodo(action.id, state)
-
-    default:
-      return state
-  }
-}
-
-const idMiddleware = (action, state, dispatch) => {
-  switch (action.type) {
-    case actions.ADD_TODO:
-      action.id = genID()
-      break
-  }
-  return action
-}
+const effectsMiddleware = applyEffects({
+  [actions.ADD_TODO]: action => assoc('id', genID(), action),
+})
 
 const loggerMiddleware = (action, state, dispatch) => {
   // console.log('consuming action:', action)
   return action
 }
 
+// Expose the app's store interface (contains methods `dispatch`, `getState`,
+// and `listen`):
+
 export const todoStore = createStore(
   appReducer,
-  combineMiddleware(idMiddleware, loggerMiddleware),
+  combineMiddleware(effectsMiddleware, loggerMiddleware),
   appInitialState,
 )
+
+// Expose methods for querying state from `getState`:
 
 export const selectTodoList = view(todoListLens)
 
@@ -97,10 +98,12 @@ export const selectTodoIDList = compose(keys, selectTodoList)
 
 export const selectTodo = curry((id, state) => view(todoLens(id), state))
 
+// Expose action creators for calls to `dispatch`:
+
 export const addTodo = (message, completed = false) => ({
   todo: {
-    message,
     completed,
+    message,
   },
   type: actions.ADD_TODO,
 })
@@ -115,4 +118,3 @@ export const removeTodo = id => ({
   id,
   type: actions.REMOVE_TODO,
 })
-
