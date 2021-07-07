@@ -5,14 +5,15 @@
   "description": "A state machine library (WIP: do not use!)",
   "main": "src/index.js",
   "scripts": {
-    "test": "node test.js -- src/**/*.test.js",
+    "test": "node test.js -- {src,examples}/**/*.test.js",
     "format": "prettier --write src/**/*.js"
   },
   "keywords": [],
   "license": "ISC",
   "devDependencies": {
     "glob": "^7.1.7",
-    "prettier": "^2.3.2"
+    "prettier": "^2.3.2",
+    "ramda": "^0.27.1"
   },
   "type": "module",
   "prettier": {
