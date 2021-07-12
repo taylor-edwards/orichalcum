@@ -9,7 +9,11 @@
  *   listen: (state => void) => fn removeListener,
  * }
  */
-export const createStore = (reducer, middleware, state) => {
+export const createStore = (
+  reducer = (action, state) => state,
+  middleware = (action, state, dispatch) => action,
+  state,
+) => {
   const actionQueue = []
   const listeners = {}
   let dispatchInProgress = false
