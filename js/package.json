@@ -1,0 +1,13 @@
+{
+  "name": "orichalcum",
+  "version": "1.0.5",
+  "author": "Taylor Edwards <me@tayloredwards.net> (tayloredwards.net)",
+  "description": "An opinionated state machine library",
+  "main": "src/index.js",
+  "scripts": {},
+  "keywords": [],
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {},
+  "type": "module"
+}

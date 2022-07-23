@@ -4,7 +4,7 @@ import {
   combineMiddleware,
   createStore,
   genID,
-} from '../../src/store.js'
+} from 'orichalcum'
 import {
   assoc,
   compose,

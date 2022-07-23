@@ -1,3 +1,4 @@
+import { once } from 'orichalcum'
 import {
   addTodo,
   removeTodo,
@@ -6,9 +7,8 @@ import {
   todoStore,
   updateTodo,
 } from './main.js'
-import { once } from '../../src/store.js'
 
-export const testTodoStore = ({ assert }) =>
+export const testTodoStore = ({ assert, equals }) =>
   new Promise((resolve, reject) => {
     // wait for expected end state after all actions have been consumed
     const [promise] = once(state => {
@@ -19,7 +19,10 @@ export const testTodoStore = ({ assert }) =>
         todoList[0].completed === false
       )
     }, todoStore)
-    promise.then(() => resolve(), err => reject(err))
+    promise.then(
+      () => resolve(),
+      err => reject(err),
+    )
 
     // dispatch some actions, make sure to set it to the above state
     todoStore.dispatch(
@@ -32,4 +35,10 @@ export const testTodoStore = ({ assert }) =>
       updateTodo(ids[1], { completed: true }),
     )
     todoStore.dispatch(removeTodo(ids[1]))
+
+    assert(
+      equals,
+      todoStore.getState().todoList[ids[0]].message === 'Get groceries',
+      true,
+    )
   })

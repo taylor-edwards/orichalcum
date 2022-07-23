@@ -59,12 +59,7 @@ const runTests = tests =>
   tests.map(async ([name, testFn]) => {
     console.log(`Running ${name}...`)
     try {
-      const res = testFn({ assert, equals, refEquals, arrayEquals })
-      if (res instanceof Promise) {
-        res.catch(err =>
-          console.error(`Uncaught error in Promise (running ${name}):`, err),
-        )
-      }
+      const res = await testFn({ assert, equals, refEquals, arrayEquals })
       return res
     } catch (err) {
       console.error('Uncaught error:', err)

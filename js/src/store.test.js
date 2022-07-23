@@ -1,4 +1,4 @@
-import { createStore, combineReducers } from './store.js'
+import { createStore } from './store.js'
 
 // Enumerate changes to state as "actions"
 // This also helps with serialization, in case actions need to go through

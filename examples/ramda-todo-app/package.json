@@ -1,0 +1,15 @@
+{
+  "name": "ramda-todo-app",
+  "version": "1.0.0",
+  "description": "An example application using Orichalcum and Ramda",
+  "main": "main.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "orichalcum": "^1.0.4",
+    "ramda": "^0.28.0"
+  },
+  "type": "module"
+}

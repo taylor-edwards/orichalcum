@@ -1,72 +1,3 @@
-/*
- * createStore(
- *   (action, state) => state, // combineReducers(...fns)
- *   (action, state, dispatch) => action, // combineMiddleware(...fns)
- *   initialState,
- * ) --> {
- *   dispatch: action => void,
- *   getState: () => state,
- *   listen: (state => void) => fn removeListener,
- * }
- */
-export const createStore = (
-  reducer = (action, state) => state,
-  middleware = (action, state, dispatch) => action,
-  state,
-) => {
-  const actionQueue = []
-  const listeners = {}
-  let dispatchInProgress = false
-
-  const queueForDispatch = (...actions) => {
-    actionQueue.push(...actions)
-    if (!dispatchInProgress) {
-      dispatchFromQueue()
-    }
-  }
-
-  const dispatchFromQueue = () => {
-    dispatchInProgress = true
-    while (typeof actionQueue[0] !== 'undefined') {
-      dispatch(actionQueue.shift())
-    }
-    dispatchInProgress = false
-  }
-
-  const dispatch = action => {
-    // middleware can alter the action but not state
-    // middleware can dispatch additional actions
-    // dispatch can be called asynchronously from middleware
-    // use combineMiddleware to use more than one layer
-    action = middleware(action, state, queueForDispatch)
-
-    // reducers can alter state but not the action
-    // use combineReducers to supply more than one reducer
-    let prevState = state
-    state = reducer(action, state)
-
-    // always run attached listeners for each action dispatched
-    alertListeners(state, prevState, action)
-  }
-
-  const attachListener = fn => {
-    const id = genID()
-    listeners[id] = fn
-    return () => {
-      delete listeners[id]
-    }
-  }
-
-  const alertListeners = (...x) =>
-    Object.values(listeners).forEach(listener => listener(...x))
-
-  return {
-    dispatch: queueForDispatch,
-    getState: () => state,
-    listen: attachListener,
-  }
-}
-
 /**
  * Each reducer must have the signature `(action, state) => state`
  * Reducers are expected to return the original state or a modified copy
@@ -165,5 +96,3 @@ export const once = (pred, store, { timeout = 300 } = {}) => {
   }
   return [promise, cancel]
 }
-
-export const genID = () => `id:${Math.random().toString(36).substr(2)}`
